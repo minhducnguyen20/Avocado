@@ -1,0 +1,34 @@
+library("ggplot2", lib.loc="~/R/win-library/3.5")
+library("plyr", lib.loc="~/R/win-library/3.5")
+library("astsa", lib.loc="~/R/win-library/3.5")
+library("forecast", lib.loc="~/R/win-library/3.5")
+library("tseries", lib.loc="~/R/win-library/3.5")
+library("xts", lib.loc="~/R/win-library/3.5")
+library(readxl)
+
+avocado <- read_excel("...avocado.xlsx")
+
+summary(avocado)
+tapply(avocado$AveragePrice,avocado$region,mean)
+summary(m1 <- aov(avocado$AveragePrice~avocado$region))
+plot(TukeyHSD(m1))
+
+
+
+qplot(region,AveragePrice, data = avocado)
+a <- data.frame(ddply(avocado, "region", summarise, avgprice = mean(AveragePrice), sdprice = sd(AveragePrice)))
+a <- a %>% mutate(rankprice = rank(avgprice),ranksd= rank(sdprice))
+  
+summary(avocado[ which(avocado$region=='Pittsburgh'), ])
+pitt <- avocado %>% filter(region == 'Pittsburgh') %>% select(AveragePrice,Date)
+head(pitt)
+plot(pitt$Date,pitt$AveragePrice)
+pitt_ts= ts(pitt[,1],start = c(2015,1,04),frequency = 52)
+head(pitt_ts)
+
+plot(pitt_ts,xlab="week",ylab="price")
+plot(pitt_ts)
+acf2(pitt_ts,25)
+summary(m2 <- auto.arima(pitt_ts))
+checkresiduals(m2)
+plot(forecast(m2,h=52))
